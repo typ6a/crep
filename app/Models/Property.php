@@ -11,9 +11,17 @@ class Property extends Model
     public $timestamps = false;
     
     protected $fillable = array(
-        'title',
         'price',
         'listingID',
+        'address',
+        'description',
+        'features',
+        'buildingDetails',
+        'pictures',
+
+
+        
+        'title',
         'beds',
         'baths',
         'farm_type',
@@ -21,10 +29,9 @@ class Property extends Model
         'building_type',
         'property_type',
         'storeys',
-        'description',
         'url',
-        'processed'
-        //'realtors'
+        'processed',
+
     );
     
     /*

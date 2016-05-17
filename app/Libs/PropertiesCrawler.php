@@ -11,7 +11,7 @@ class PropertiesCrawler {
     //protected $base_url = null;
 
     public function execute() {
-        $url ='https://www.realtor.ca/Residential/Recreational/16448868/90-HIGHLAND-DR-ORO-MEDONTE-Ontario-L0L2L0';
+        $url ='https://www.realtor.ca/Residential/Single-Family/16939628/11-EDITH-AVE-Toronto-Ontario-M6P3T5-Dovercourt-Wallace-Emerson-Junction';
         $html = file_get_contents($url);
         $html = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html);
         $this->crawler = new Crawler($html);
@@ -24,13 +24,18 @@ class PropertiesCrawler {
         pre($items,1);
         pre($items->length,1);
         */
+        //$property = null;
         $property = new \App\Models\Property([
             'price' => $this->parsePropertyPrice(),
             'listingID' => $this->parsePropertyListingID(),
-            'address' => $this->parsePropertyAddress()
+            'address' => $this->parsePropertyAddress(),
+            'description' => $this->parsePropertyDescription(),
+            'features' => $this->parsePropertyFeatures(),
+            'pictures' => $this->parsePropertyPictures(),
+            'buildingDetails' => $this->parsePropertyBuildingDetails()
         ]);
 
-        pre(gettype($property->address),1);
+        //pre($property->features,1);
 
         $properties = \App\Models\Property::where('processed', 0)->get();
         foreach ($properties as $property) {
@@ -71,8 +76,7 @@ class PropertiesCrawler {
     }
 
     protected function parsePropertyAddress() {
-
-        $items = $this->crawler->filter('#m_property_dtl_address_lft > h1');
+        $items = $this->crawler->filter('#m_property_dtl_address');
         $address = null;
         foreach($items as $address){
             $address = $address->nodeValue;
@@ -80,6 +84,18 @@ class PropertiesCrawler {
         //$address = trim($address);
         return $address;
     }
+
+    protected function parsePropertyDescription() {
+        $items = $this->crawler->filter('#m_property_dtl_gendescription');
+        $description = null;
+        foreach($items as $description){
+            $description = $description->nodeValue;
+        }
+        $description = trim($description);
+        return $description;
+    }
+
+
     protected function parsePropertyPrice() {
         $items = $this->crawler->filter('#m_property_dtl_info_hdr_price');
         $price = null;
@@ -128,36 +144,67 @@ class PropertiesCrawler {
         } return $images;
     }
 
-    protected function parseProductProperties($product) {
-        //$productProperties = [];
-        $properties = [];
-        $propertyRows = $this->crawler->filter('.yeni_ipep_props_groups table tbody tr.prop_line');
-        //pre($propertyRow,1);
-
-        if ($propertyRows->count()) {
-            $propertyRows->each(function (Crawler $propertyRow) use (&$properties, $product) {
-                $propertyName = trim($propertyRow->filter('td:first-child')->text());
-
-                $property = \App\Models\ProductProperty::where('name', $propertyName)->first();
-
-                if (!$property) {
-                    $property = new \App\Models\ProductProperty([
-                        'name' => $propertyName
-                    ]);
+    protected function parsePropertyFeatures() {
+        $features = [];
+        $featureColls = $this->crawler->filter('#rptFeatures td');
+        //pre(count($featureColls),1);
+        if ($featureColls->count()) {
+            $featureColls->each(function (Crawler $featureColl) use (&$features) {
+                $featureName = null;
+                $featureValue = null;
+                $featureNameEl = $featureColl->filter('span:first-child');
+                if($featureNameEl->count()){
+                    $featureName = trim($featureNameEl->text());
                 }
-                $property->save();
-
-                $property_id = $property->id;
-
-                $property = \App\Models\ProductToProductProperty::where('product_property_id', $property_id)->where('product_id', $product->id)->first();
-                if (!$property) {
-                    $properties[] = new \App\Models\ProductToProductProperty([
-                        'product_property_id' => $property_id,
-                        'value' => trim($propertyRow->filter('td:last-child')->text()),
-                    ]);
+                $featureValueEl = $featureColl->filter('span:last-child');
+                if ($featureValueEl->count()){
+                    $featureValue = trim($featureValueEl->text());
+                    //pre($featureValue);
+                }
+                if($featureName && $featureValue) {
+                    $features[] = [
+                        'name' => $featureName,
+                        'value' => $featureValue
+                    ];
                 }
             });
-        } return $properties;
+
+        }
+        //pre($features,1);
+        return $features;
+    }
+
+    protected function parsePropertyPictures() {
+        $images = [];
+        $items = $this->crawler->filter('#makeMeScrollable img');
+        //pre($items->count(),1);
+        if ($items->count()) {
+            $items->each(function (Crawler $image) {
+                $filename = null;
+                $url = $image->attr('src');
+                $imageUrl = 'http://' . trim($url, '/');
+                $filename = md5($url) . '.jpg';
+                $images[] = [
+                    'url' => $imageUrl,
+                    'filename' => $filename
+                ];
+                //pre($images->url,1);
+                $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
+                $data = file_get_contents($url);
+                file_put_contents($filepath, $data);
+            });
+        }
+
+        exit('adsad');
+
+        return $images;
+    }
+
+
+
+    protected function parsePropertyBuildingDetails() {
+        $buildingDetails = null;
+        return $buildingDetails;
     }
 
 }
