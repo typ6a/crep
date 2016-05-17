@@ -77,7 +77,7 @@ class PropertiesCrawler {
         foreach($items as $address){
             $address = $address->nodeValue;
         }
-        $address = trim($address);
+        //$address = trim($address);
         return $address;
     }
     protected function parsePropertyPrice() {
