@@ -18,6 +18,7 @@ class Property extends Model
         'features',
         'buildingDetails',
         'pictures',
+        'realtor',
 
 
         
