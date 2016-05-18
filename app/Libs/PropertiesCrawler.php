@@ -13,7 +13,7 @@ class PropertiesCrawler
 
     public function execute()
     {
-        $url = 'https://www.realtor.ca/Residential/Recreational/16448868/90-HIGHLAND-DR-ORO-MEDONTE-Ontario-L0L2L0';
+        $url = 'https://www.realtor.ca/Residential/Single-Family/16801705/60-HEMLOCK-Street-CARDIFF-Ontario-K0L1M0';
         $html = file_get_contents($url);
         $html = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html);
         $this->crawler = new Crawler($html);
@@ -28,14 +28,14 @@ class PropertiesCrawler
         */
         //$property = null;
         $property = new \App\Models\Property([
-            'price' => $this->parsePropertyPrice(),
-            'listingID' => $this->parsePropertyListingID(),
-            'address' => $this->parsePropertyAddress(),
-            'description' => $this->parsePropertyDescription(),
-            'features' => $this->parsePropertyFeatures(),
-            'pictures' => $this->parsePropertyPictures(),
-            'buildingDetails' => $this->parsePropertyBuildingDetails(),
-            'realtor' => $this->parsePropertyRealtor()
+            'price'            => $this->parsePropertyPrice(),
+            'listingID'        => $this->parsePropertyListingID(),
+            'address'          => $this->parsePropertyAddress(),
+            'description'      => $this->parsePropertyDescription(),
+            'features'         => $this->parsePropertyFeatures(),
+            'pictures'         => $this->parsePropertyPictures(),
+            'buildingDetails'  => $this->parsePropertyBuildingDetails(),
+            'realtor'          => $this->parsePropertyRealtor()
         ]);
 
         //pre($property->features,1);
@@ -211,11 +211,13 @@ class PropertiesCrawler
 
     protected function parsePropertyRealtor()
     {
-        $realtorInfo = [];
+        //$realtorInfo = [];
         $realtorCells = $this->crawler->filter('#divRealtor .m_property_dtl_realtor_cell');
-        //pre($realtorCell->count(),1);
+        //pre($realtorCells->count(),1);
         if ($realtorCells->count()) {
+            //pre('sasd',1);
             $realtorCells->each(function (Crawler $realtorCell) use (&$realtorInfo) {
+
                 $realtorName = null;
                 $realtorTitle = null;
                 $realtorLinks = [];
@@ -241,17 +243,27 @@ class PropertiesCrawler
                 }
 
 
-                $realtorMediaLinks = $realtorCell->filter('.m_property_dtl_realtor_social');
-                if ($realtorMediaLinks->count()) {
-                    $realtorMediaLinks->each(function (Crawler $realtorMediaLink) use (&$realtorInfo){
-                        $realtorLinkEl = $realtorMediaLink->filter('.m_realtor_dtl_contacts_rgt_media noPrint');
-                        if ($realtorLinkEl->count()) {
-                            $realtorLinks = $realtorLinkEl;
+                $realtorCellMediaLinks = $realtorCell->filter('.m_property_dtl_realtor_social');
 
-                    }
+                if ($realtorCellMediaLinks->count()) {
+                    $realtorCellMediaLinks->each(function (Crawler $realtorMediaLinksEl) use (&$realtorLinks){
+
+                        $realtorLinksEl = $realtorMediaLinksEl->filter('.m_realtor_dtl_contacts_rgt_media');
+                        if ($realtorLinksEl->count()) {
+                            $realtorLinksEl->each(function( Crawler $realtorLinkEl) use (&$realtorLinks) {
+
+                                $aEls = $realtorLinkEl->filter('.m_realtor_dtl_contacts_rgt_media.noPrint a');
+                                if ($aEls->count()){
+                                    $aEls->each(function(Crawler $a) use (&$realtorLinks){
+                                        $realtorLinks[] = $a->attr('href');
+                                    });
+
+                                }
+                            });
+                        }
                     });
 
-
+                    pre($realtorLinks,1);
 
                 }
 
