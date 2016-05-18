@@ -28,17 +28,19 @@ class PropertiesCrawler
         */
         //$property = null;
         $property = new \App\Models\Property([
-            'price'            => $this->parsePropertyPrice(),
-            'listingID'        => $this->parsePropertyListingID(),
-            'address'          => $this->parsePropertyAddress(),
-            'description'      => $this->parsePropertyDescription(),
-            'features'         => $this->parsePropertyFeatures(),
-            'pictures'         => $this->parsePropertyPictures(),
-            'buildingDetails'  => $this->parsePropertyBuildingDetails(),
-            'realtor'          => $this->parsePropertyRealtor()
+            'price' => $this->parsePropertyPrice(),
+            'listingID' => $this->parsePropertyListingID(),
+            'address' => $this->parsePropertyAddress(),
+            'pictures' => $this->parsePropertyPictures(),
+            'description' => $this->parsePropertyDescription(),
+            'features' => $this->parsePropertyFeatures(),
+            'buildingDetails' => $this->parsePropertyBuildingDetails(),
+            'landDetails' => $this->parsePropertyLandDetails(),
+            'realtor' => $this->parsePropertyRealtor(),
+
         ]);
 
-        //pre($property->features,1);
+        pre($property, 1);
 
         $properties = \App\Models\Property::where('processed', 0)->get();
         foreach ($properties as $property) {
@@ -84,7 +86,7 @@ class PropertiesCrawler
         foreach ($items as $address) {
             $address = $address->nodeValue;
         }
-        //$address = trim($address);
+        $address = trim($address);
         return $address;
     }
 
@@ -209,18 +211,91 @@ class PropertiesCrawler
         return $images;
     }
 
+
+
     protected function parsePropertyRealtor()
     {
-        //$realtorInfo = [];
+        $realtorInfo = [];
         $realtorCells = $this->crawler->filter('#divRealtor .m_property_dtl_realtor_cell');
-        //pre($realtorCells->count(),1);
         if ($realtorCells->count()) {
-            //pre('sasd',1);
             $realtorCells->each(function (Crawler $realtorCell) use (&$realtorInfo) {
 
                 $realtorName = null;
                 $realtorTitle = null;
                 $realtorLinks = [];
+                $realtorOfficeDesignation = null;
+                $realtorOfficeLinks = [];
+
+                $realtorPicture = $realtorCell->filter('.m_property_dtl_realtor_info_lft a img');
+                if ($realtorPicture->count()) {
+                    $realtorPicture->each(function (Crawler $image){
+                        $filename = null;
+                        $url = $image->attr('src');
+                        $imageUrl = 'http://' . trim($url, '/');
+                        $filename = md5($url) . '.jpg';
+                        $images[] = [
+                            'url' => $imageUrl,
+                            'filename' => $filename,
+                        ];
+                        //pre($images->url,1);
+                        $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
+                        $data = file_get_contents($url);
+                        file_put_contents($filepath, $data);
+                    });
+                }
+
+                $realtorOfficePicture = $realtorCell->filter('.m_property_dtl_office_logo.noPrint a img');
+                if ($realtorOfficePicture->count()) {
+                    $realtorOfficePicture->each(function (Crawler $image){
+                        $filename = null;
+                        $url = $image->attr('src');
+                        $imageUrl = 'http://' . trim($url, '/');
+                        $filename = md5($url) . '.jpg';
+                        $images[] = [
+                            'url' => $imageUrl,
+                            'filename' => $filename
+                        ];
+                        //pre($images->url,1);
+                        $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
+                        $data = file_get_contents($url);
+                        file_put_contents($filepath, $data);
+                    });
+                }
+
+                $realtorOfficeTitleEl = $realtorCell->filter('#lblOfficeName');
+                if ($realtorOfficeTitleEl->count()) {
+                    $realtorOfficeTitle = trim($realtorOfficeTitleEl->text());
+                }
+
+                $realtorOfficeDesignationEl = $realtorCell->filter('.m_property_dtl_office_designation span');
+                if ($realtorOfficeDesignationEl->count()) {
+                    $realtorOfficeDesignation = trim($realtorOfficeDesignationEl->text());
+                }
+
+                $realtorOfficeAddressEl = $realtorCell->filter('.m_property_dtl_office_address span');
+                if ($realtorOfficeAddressEl->count()) {
+                    $realtorOfficeAddress = str_replace('<br>', ',', trim($realtorOfficeAddressEl->text()));
+                }
+
+                $realtorOfficeMediaLinks = $realtorCell->filter('.m_property_dtl_office_social a');
+                if ($realtorOfficeMediaLinks->count()) {
+                    $realtorOfficeMediaLinks->each(function (Crawler $a) use (&$realtorOfficeLinks) {
+                        $realtorOfficeLinks[] = $a->attr('href');
+                    });
+
+                }
+                $realtorOfficeCellPhones = $realtorCell->filter('.m_property_dtl_office_phone .m_realtor_dtl_phone_item span');
+                if ($realtorOfficeCellPhones->count()) {
+                    $realtorOfficeCellPhones->each(function (Crawler $span) use (&$realtorOfficePhones) {
+                        $realtorOfficePhones[] = trim($span->text());
+                    });
+                }
+                $realtorCellPhones = $realtorCell->filter('.m_property_dtl_realtor_phone .m_realtor_dtl_phone_item span');
+                if ($realtorCellPhones->count()) {
+                    $realtorCellPhones->each(function (Crawler $span) use (&$realtorPhones) {
+                        $realtorPhones[] = trim($span->text());
+                    });
+                }
 
                 $realtorTitleEl = $realtorCell->filter('#lblTitle');
                 if ($realtorTitleEl->count()) {
@@ -232,68 +307,97 @@ class PropertiesCrawler
                     $realtorName = trim($realtorNameEl->text());
                 }
 
-                $realtorPhoneEl = $realtorCell->filter('#lblPhone_0');
-                if ($realtorPhoneEl->count()) {
-                    $realtorPhone = trim($realtorPhoneEl->text());
-                }
-
-                $realtorFaxEl = $realtorCell->filter('#lblPhone_1');
-                if ($realtorFaxEl->count()) {
-                    $realtorFax = trim($realtorFaxEl->text());
-                }
-
-
-                $realtorCellMediaLinks = $realtorCell->filter('.m_property_dtl_realtor_social');
-
-                if ($realtorCellMediaLinks->count()) {
-                    $realtorCellMediaLinks->each(function (Crawler $realtorMediaLinksEl) use (&$realtorLinks){
-
-                        $realtorLinksEl = $realtorMediaLinksEl->filter('.m_realtor_dtl_contacts_rgt_media');
-                        if ($realtorLinksEl->count()) {
-                            $realtorLinksEl->each(function( Crawler $realtorLinkEl) use (&$realtorLinks) {
-
-                                $aEls = $realtorLinkEl->filter('.m_realtor_dtl_contacts_rgt_media.noPrint a');
-                                if ($aEls->count()){
-                                    $aEls->each(function(Crawler $a) use (&$realtorLinks){
-                                        $realtorLinks[] = $a->attr('href');
-                                    });
-
-                                }
-                            });
-                        }
+                $realtorMediaLinks = $realtorCell->filter('.m_property_dtl_realtor_social a');
+                if ($realtorMediaLinks->count()) {
+                    $realtorMediaLinks->each(function (Crawler $a) use (&$realtorLinks) {
+                        $realtorLinks[] = $a->attr('href');
                     });
-
-                    pre($realtorLinks,1);
-
                 }
 
-                    $realtorInfo[] = [
-                        'realtorName'   => $realtorName,
-                        'realtorTitle'  => $realtorTitle,
-                        'realtorPhone'  => $realtorPhone,
-                        'realtorFax'    => $realtorFax,
-                        'realtorLinks'  => $realtorLinks
 
-                    ];
+                $realtorInfo[] = [
+                    'realtorName' => $realtorName,
+                    'realtorTitle' => $realtorTitle,
+                    'realtorLinks' => $realtorLinks,
+                    'realtorOfficeTitle' => $realtorOfficeTitle,
+                    'realtorOfficeDesignation' => $realtorOfficeDesignation,
+                    'realtorOfficeAddress' => $realtorOfficeAddress,
+                    'realtorOfficeLinks' => $realtorOfficeLinks,
+                    'realtorPhones' => $realtorPhones,
+                    'realtorOfficePhones' => $realtorOfficePhones
+
+
+                ];
 
             });
 
         }
-        pre($realtorInfo,1);
+        //pre($realtorInfo,1);
+        return $realtorInfo;
     }
 
 
+    protected function parsePropertyBuildingDetails()
+    {
+        $buildingDetails = [];
+        $featureColls = $this->crawler->filter('#rptBuildingDetails td');
+        //pre(count($featureColls),1);
+        if ($featureColls->count()) {
+            $featureColls->each(function (Crawler $featureColl) use (&$buildingDetails) {
+                $featureName = null;
+                $featureValue = null;
+                $featureNameEl = $featureColl->filter('span:first-child');
+                if ($featureNameEl->count()) {
+                    $featureName = trim($featureNameEl->text());
+                }
+                $featureValueEl = $featureColl->filter('span:last-child');
+                if ($featureValueEl->count()) {
+                    $featureValue = trim($featureValueEl->text());
+                    //pre($featureValue);
+                }
+                if ($featureName && $featureValue) {
+                    $buildingDetails[] = [
+                        'name' => $featureName,
+                        'value' => $featureValue
+                    ];
+                }
+            });
+
+        }
+        //pre($features,1);
+        return $buildingDetails;
+    }
 
 
+    protected function parsePropertyLandDetails()
+    {
+        $landDetails = [];
+        $featureColls = $this->crawler->filter('#rptLandDetails td');
+        //pre(count($featureColls),1);
+        if ($featureColls->count()) {
+            $featureColls->each(function (Crawler $featureColl) use (&$landDetails) {
+                $featureName = null;
+                $featureValue = null;
+                $featureNameEl = $featureColl->filter('span:first-child');
+                if ($featureNameEl->count()) {
+                    $featureName = trim($featureNameEl->text());
+                }
+                $featureValueEl = $featureColl->filter('span:last-child');
+                if ($featureValueEl->count()) {
+                    $featureValue = trim($featureValueEl->text());
+                    //pre($featureValue);
+                }
+                if ($featureName && $featureValue) {
+                    $landDetails[] = [
+                        'name' => $featureName,
+                        'value' => $featureValue
+                    ];
+                }
+            });
 
-
-
-
-protected
-function parsePropertyBuildingDetails()
-{
-    $buildingDetails = null;
-    return $buildingDetails;
-}
+        }
+        //pre($features,1);
+        return $landDetails;
+    }
 
 }

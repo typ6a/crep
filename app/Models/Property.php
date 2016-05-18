@@ -19,18 +19,17 @@ class Property extends Model
         'buildingDetails',
         'pictures',
         'realtor',
-
+        'landDetails',
+        
 
         
-        'title',
-        'beds',
-        'baths',
-        'farm_type',
-        'land_size',
-        'building_type',
-        'property_type',
-        'storeys',
-        'url',
+        
+
+
+
+
+
+        'realtorOffice',
         'processed',
 
     );
