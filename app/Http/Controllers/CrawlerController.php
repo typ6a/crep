@@ -15,9 +15,14 @@ class CrawlerController extends Controller
         set_time_limit(36000);
     }
 
-    public function crawlProperties()
+    public function crawlRealtorProperties()
     {
-        $c = new \App\Libs\PropertiesCrawler();
+        $c = new \App\Libs\RealtorPropertiesCrawler();
+        $c->execute();
+    }
+    public function crawlRewProperties()
+    {
+        $c = new \App\Libs\RewPropertiesCrawler();
         $c->execute();
     }
 

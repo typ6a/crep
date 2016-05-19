@@ -4,7 +4,7 @@ namespace App\Libs;
 
 use Symfony\Component\DomCrawler\Crawler as Crawler;
 
-class PropertiesCrawler
+class RealtorPropertiesCrawler
 {
 
     protected $base_url = 'https://www.realtor.ca/Residential/Recreational/16448868/90-HIGHLAND-DR-ORO-MEDONTE-Ontario-L0L2L0';
@@ -109,7 +109,7 @@ class PropertiesCrawler
         foreach ($items as $price) {
             $price = $price->nodeValue;
         }
-        $price = preg_replace('/[^\d]/', '', $price);
+        $price = trim(preg_replace('/[^\d]/', '', $price));
         return $price;
     }
 

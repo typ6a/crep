@@ -15,4 +15,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('crawler/crawlProperties', 'CrawlerController@crawlProperties');
+Route::get('crawler/crawlRealtorProperties', 'CrawlerController@crawlRealtorProperties');
+Route::get('crawler/crawlRewProperties', 'CrawlerController@crawlRewProperties');
