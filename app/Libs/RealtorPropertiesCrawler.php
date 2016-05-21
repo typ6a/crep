@@ -31,12 +31,12 @@ class RealtorPropertiesCrawler
             'price' => $this->parsePropertyPrice(),
             'listingID' => $this->parsePropertyListingID(),
             'address' => $this->parsePropertyAddress(),
-            'pictures' => $this->parsePropertyPictures(),
+            'images' => $this->parsePropertyImages(),
             'description' => $this->parsePropertyDescription(),
             'features' => $this->parsePropertyFeatures(),
             'buildingDetails' => $this->parsePropertyBuildingDetails(),
             'landDetails' => $this->parsePropertyLandDetails(),
-            'realtor' => $this->parsePropertyRealtor(),
+            'realtors' => $this->parsePropertyRealtor(),
 
         ]);
 
@@ -186,7 +186,7 @@ class RealtorPropertiesCrawler
         return $features;
     }
 
-    protected function parsePropertyPictures()
+    protected function parsePropertyImages()
     {
         $images = [];
         $items = $this->crawler->filter('#makeMeScrollable img');
@@ -213,7 +213,7 @@ class RealtorPropertiesCrawler
 
 
 
-    protected function parsePropertyRealtor()
+    protected function parsePropertyRealtors()
     {
         $realtorInfo = [];
         $realtorCells = $this->crawler->filter('#divRealtor .m_property_dtl_realtor_cell');

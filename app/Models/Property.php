@@ -18,20 +18,10 @@ class Property extends Model
         'features',
         'buildingDetails',
         'pictures',
-        'realtor',
+        'realtors',
         'landDetails',
-        
 
-        
-        
-
-
-
-
-
-        'realtorOffice',
         'processed',
-
     );
     
     /*
@@ -47,4 +37,12 @@ class Property extends Model
     public function realtors(){
         return $this->hasMany('App\Models\PropertyRealtor', 'property_id');
     }
+
+    public function buildingDetails(){
+        return $this->hasMany('App\Models\PropertyBuildingDetails', 'property_id');
+    }
+    public function landDetails(){
+        return $this->hasMany('App\Models\PropertyLandDetails', 'property_id');
+    }
+
 }
