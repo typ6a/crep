@@ -41,6 +41,7 @@ class RewPropertiesCrawler
         ];
 
 
+        pre($property, 1);
         pre('dine done', 1);
     }
 
@@ -129,7 +130,6 @@ class RewPropertiesCrawler
             }
             $propertyType = trim($propertyType);
         }
-
         $propertySummary = [
             'beds' => $propertyBeds,
             'baths' => $propertyBaths,
@@ -140,7 +140,6 @@ class RewPropertiesCrawler
         return $propertySummary;
     }
 
-
     protected function parsePropertyListingID()
     {
         $propertyListingIDs = $this->crawler->filter('.propertyheader-secondary.propertyheader-piped_list li')->last();
@@ -150,7 +149,6 @@ class RewPropertiesCrawler
         $propertyListingID = str_replace('Listing ID:', '', preg_replace('|\s+|', ' ', trim($propertyListingID)));
         return $propertyListingID;
     }
-
 
     protected function parsePropertyDescription()
     {
@@ -170,11 +168,8 @@ class RewPropertiesCrawler
             'propertyDescriptionTitle' => $propertyDescriptionTitle,
             'propertyDescription' => $propertyDescription
         ];
-
         return $description;
-
     }
-
 
     protected function parsePropertyPrice()
     {
@@ -188,8 +183,7 @@ class RewPropertiesCrawler
         return $price;
     }
 
-
-    protected function parsePropertyOverview()
+    protected function parsePropertyOverview() //Property Overview+Special Features
     {
         $features = [];
         $featureRows = $this->crawler->filter('.contenttable tbody tr');
@@ -213,7 +207,6 @@ class RewPropertiesCrawler
                     ];
                 }
             });
-
         }
         return $features;
     }
@@ -221,10 +214,11 @@ class RewPropertiesCrawler
     protected function parsePropertyImages()
     {
         $images = [];
-        $items = $this->crawler->filter('.galleria-thumbnails-container .galleria-thumbnails-list .galleria-thumbnails .galleria-image img');
+
+        $items = $this->crawler->filter('.galleria-thumbnails img');
         //pre($items->count(),1);
         if ($items->count()) {
-            $items->each(function (Crawler $image) {
+            $items->each(function (Crawler $image) use (&$realtorInfo) {
                 $filename = null;
                 $url = $image->attr('src');
                 $imageUrl = 'http://' . trim($url, '/');
@@ -242,33 +236,6 @@ class RewPropertiesCrawler
         //exit('adsad');
         return $images;
     }
-
-    protected function parsePropertyPictures()
-    {
-        $images = [];
-        $items = $this->crawler->filter('.galleria-thumbnails-container  img');// do not works!!!!!!!!!!!!suka
-        //pre($items->count(),1);
-        if ($items->count()) {
-            $items->each(function (Crawler $image) {
-                $filename = null;
-                $url = $image->attr('src');
-                $imageUrl = 'http://' . trim($url, '/');
-                $filename = md5($url) . '.jpg';
-                $images[] = [
-                    'url' => $imageUrl,
-                    'filename' => $filename
-                ];
-                //pre($images->url,1);
-                $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
-                $data = file_get_contents($url);
-                file_put_contents($filepath, $data);
-            });
-        }
-        //exit('adsad');
-        return $images;
-    }
-
-
 
     protected function parsePropertyRealtors()
     {
@@ -284,7 +251,6 @@ class RewPropertiesCrawler
                 $realtorPicture = $realtorCell->filter('.contact-logos img');
                 //pre ($realtorPicture->count(), 1);
                 if ($realtorPicture->count()) {
-
                         $filename = null;
                         $url = $realtorPicture->attr('src');
                         $imageUrl = 'http://' . trim($url, '/');
@@ -297,16 +263,12 @@ class RewPropertiesCrawler
                         $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
                         $data = file_get_contents($url);
                         file_put_contents($filepath, $data);
-
                 }
-
-
 
                 $realtorOfficeTitleEl = $realtorCell->filter('.contact-office_name');
                 if ($realtorOfficeTitleEl->count()) {
                     $realtorOfficeTitle = trim($realtorOfficeTitleEl->text());
                 }
-
 
                 $realtorCellPhones = $realtorCell->filter('.contact-phonenumbers dd > a');
                 //pre($realtorCellPhones->count(),1);
@@ -315,8 +277,6 @@ class RewPropertiesCrawler
                         $realtorPhones[] = trim($span->text());
                     });
                 }
-
-
 
                 $realtorNameEl = $realtorCell->filter('.contact-agent_name > a');
                 if ($realtorNameEl->count()) {
@@ -328,16 +288,11 @@ class RewPropertiesCrawler
                     'realtorOfficeTitle' => $realtorOfficeTitle,
                     'realtorPhones' => $realtorPhones,
                     'realtorName' => $realtorName,
-
-
                 ];
 
             });
-
         }
-        pre($realtorInfo,1);
+        //pre($realtorInfo,1);
         return $realtorInfo;
     }
-
-
 }

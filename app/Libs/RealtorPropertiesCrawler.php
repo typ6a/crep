@@ -28,15 +28,15 @@ class RealtorPropertiesCrawler
         */
         //$property = null;
         $property = new \App\Models\Property([
+            'address' => $this->parsePropertyAddress(),
+            'description' => $this->parsePropertyDescription(),
             'price' => $this->parsePropertyPrice(),
             'listingID' => $this->parsePropertyListingID(),
-            'address' => $this->parsePropertyAddress(),
+            'features' => $this->parsePropertyFeatures(),//noname table
             'images' => $this->parsePropertyImages(),
-            'description' => $this->parsePropertyDescription(),
-            'features' => $this->parsePropertyFeatures(),
-            'buildingDetails' => $this->parsePropertyBuildingDetails(),
-            'landDetails' => $this->parsePropertyLandDetails(),
             'realtors' => $this->parsePropertyRealtors(),
+            'buildingDetails' => $this->parsePropertyBuildingDetails(),//building
+            'landDetails' => $this->parsePropertyLandDetails(),//land
 
         ]);
 
@@ -90,7 +90,7 @@ class RealtorPropertiesCrawler
         return $address;
     }
 
-    protected function parsePropertyDescription()
+    protected function parsePropertyDescription() //description
     {
         $items = $this->crawler->filter('#m_property_dtl_gendescription');
         $description = null;
@@ -125,37 +125,9 @@ class RealtorPropertiesCrawler
         return $listingID;
     }
 
-    protected function parseProductImages($product)
-    {
-        $images = [];
-        $items = $this->crawler->filter('.item_gal a > img');
-
-        if ($items->count()) {
-            $items->each(function (Crawler $image, $i) use (&$images, $product) {
-
-                $url = str_replace('resizer2/6', 'resizer2/2', $image->attr('src'));
-                $parts = explode('?', $url);
-                $url = (string)array_shift($parts);
-                $imageUrl = 'http://' . trim($url, '/');
-                $filename = $product->category_id . '.' . $i . '.jpg';
-                $images[] = new \App\Models\ProductImage([
-                    'url' => $imageUrl,
-                    'filename' => $filename
-                ]);
-                // save image to local HDD
-                $filepath = 'd:\workspace\leds\public\data\images\\' . $filename;
-
-                file_put_contents($filepath, file_get_contents($imageUrl));
-                //pre($images);
 
 
-            });
-
-        }
-        return $images;
-    }
-
-    protected function parsePropertyFeatures()
+    protected function parsePropertyFeatures() //noname table
     {
         $features = [];
         $featureColls = $this->crawler->filter('#rptFeatures td');
@@ -337,7 +309,7 @@ class RealtorPropertiesCrawler
     }
 
 
-    protected function parsePropertyBuildingDetails()
+    protected function parsePropertyBuildingDetails()//building
     {
         $buildingDetails = [];
         $featureColls = $this->crawler->filter('#rptBuildingDetails td');
@@ -369,7 +341,7 @@ class RealtorPropertiesCrawler
     }
 
 
-    protected function parsePropertyLandDetails()
+    protected function parsePropertyLandDetails()//land
     {
         $landDetails = [];
         $featureColls = $this->crawler->filter('#rptLandDetails td');
