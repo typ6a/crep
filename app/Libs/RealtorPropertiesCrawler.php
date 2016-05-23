@@ -36,7 +36,7 @@ class RealtorPropertiesCrawler
             'features' => $this->parsePropertyFeatures(),
             'buildingDetails' => $this->parsePropertyBuildingDetails(),
             'landDetails' => $this->parsePropertyLandDetails(),
-            'realtors' => $this->parsePropertyRealtor(),
+            'realtors' => $this->parsePropertyRealtors(),
 
         ]);
 

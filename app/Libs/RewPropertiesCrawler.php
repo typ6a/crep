@@ -13,7 +13,7 @@ class RewPropertiesCrawler
 
     public function execute()
     {
-        $url = 'http://www.rew.ca/properties/408997/17-9933-chemainus-road-chemainus?property_browse=chemainus-bc';
+        $url = 'http://www.rew.ca/properties/R2060885/110-15875-20-avenue-surrey?property_browse=surrey-area-bc';
         $html = file_get_contents($url);
         $html = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html);
         $this->crawler = new Crawler($html);
@@ -35,46 +35,12 @@ class RewPropertiesCrawler
             'description' => $this->parsePropertyDescription(),
             'summary' => $this->parsePropertySummary(),
             'overview' => $this->parsePropertyOverview(),
+            'realtors' => $this->parsePropertyRealtors()
 
 
         ];
 
-        //pre($property, 1);
 
-        $properties = \App\Models\Property::where('processed', 0)->get();
-        foreach ($properties as $property) {
-            /*
-            $response = @file_get_contents($product->url);
-            //pre($http_response_header,1);
-            $response_code = (int) explode(' ', $http_response_header[0])[1];
-            if (trim($response) || ($response_code > 400 && $response_code < 500)) {
-                //$product->delete();
-                continue;
-            }
-            */
-
-            pre('1', 1);
-
-            //$url = $property->url;
-            $this->crawler = new Crawler($html);
-            $property->price = $this->parsePropertyPrice();
-
-            if ($product->price == null) {
-                $product->price = 0;
-            }
-
-            $product->images()->saveMany($this->parseProductImages($product));
-
-            $productProperties = $this->parseProductProperties($product);
-
-            $product->properties()->saveMany($productProperties);
-
-
-            $product->processed = 1;
-            $product->save();
-            //exit('sdfdsf');
-            sleep(1);
-        }
         pre('dine done', 1);
     }
 
@@ -223,7 +189,6 @@ class RewPropertiesCrawler
     }
 
 
-
     protected function parsePropertyOverview()
     {
         $features = [];
@@ -252,11 +217,12 @@ class RewPropertiesCrawler
         }
         return $features;
     }
+
     protected function parsePropertyImages()
     {
         $images = [];
         $items = $this->crawler->filter('.galleria-thumbnails-container .galleria-thumbnails-list .galleria-thumbnails .galleria-image img');
-        pre($items->count(),1);
+        //pre($items->count(),1);
         if ($items->count()) {
             $items->each(function (Crawler $image) {
                 $filename = null;
@@ -267,13 +233,13 @@ class RewPropertiesCrawler
                     'url' => $imageUrl,
                     'filename' => $filename
                 ];
-                pre($images->url,1);
+                //pre($images->url,1);
                 $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
                 $data = file_get_contents($url);
                 file_put_contents($filepath, $data);
             });
         }
-        exit('adsad');
+        //exit('adsad');
         return $images;
     }
 
@@ -303,6 +269,75 @@ class RewPropertiesCrawler
     }
 
 
+
+    protected function parsePropertyRealtors()
+    {
+        $realtorInfo = [];
+        $realtorCells = $this->crawler->filter('.box--contact .row.contact');
+        //pre($realtorCells->count(),1);
+        if ($realtorCells->count()) {
+            $realtorCells->each(function (Crawler $realtorCell) use (&$realtorInfo) {
+
+                $images =[];
+                $realtorPhones=[];
+
+                $realtorPicture = $realtorCell->filter('.contact-logos img');
+                //pre ($realtorPicture->count(), 1);
+                if ($realtorPicture->count()) {
+
+                        $filename = null;
+                        $url = $realtorPicture->attr('src');
+                        $imageUrl = 'http://' . trim($url, '/');
+                        $filename = md5($url) . '.jpg';
+                        $images[] = [
+                            'url' => $imageUrl,
+                            'filename' => $filename,
+                        ];
+                        //pre($images->url,1);
+                        $filepath = 'd:\workspace\crep\public\data\images\\' . $filename;
+                        $data = file_get_contents($url);
+                        file_put_contents($filepath, $data);
+
+                }
+
+
+
+                $realtorOfficeTitleEl = $realtorCell->filter('.contact-office_name');
+                if ($realtorOfficeTitleEl->count()) {
+                    $realtorOfficeTitle = trim($realtorOfficeTitleEl->text());
+                }
+
+
+                $realtorCellPhones = $realtorCell->filter('.contact-phonenumbers dd > a');
+                //pre($realtorCellPhones->count(),1);
+                if ($realtorCellPhones->count()) {
+                    $realtorCellPhones->each(function (Crawler $span) use (&$realtorPhones) {
+                        $realtorPhones[] = trim($span->text());
+                    });
+                }
+
+
+
+                $realtorNameEl = $realtorCell->filter('.contact-agent_name > a');
+                if ($realtorNameEl->count()) {
+                    $realtorName = trim($realtorNameEl->text());
+                }
+
+                $realtorInfo[] = [
+                    'images' => $images,
+                    'realtorOfficeTitle' => $realtorOfficeTitle,
+                    'realtorPhones' => $realtorPhones,
+                    'realtorName' => $realtorName,
+
+
+                ];
+
+            });
+
+        }
+        pre($realtorInfo,1);
+        return $realtorInfo;
+    }
 
 
 }
