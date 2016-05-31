@@ -28,16 +28,22 @@ class RewPropertiesCrawler
         */
         //$property = null;
         $property = [
-            'price' => $this->parsePropertyPrice(),
-            'listingID' => $this->parsePropertyListingID(),
-            'address' => $this->parsePropertyAddress(),
-            'pictures' => $this->parsePropertyImages(),
-            'description' => $this->parsePropertyDescription(),
-            'summary' => $this->parsePropertySummary(),
-            'overview' => $this->parsePropertyOverview(),
-            'realtors' => $this->parsePropertyRealtors()
+            'url' => $url,
+            'address'     => $this->parsePropertyAddress(), //propertyStreetAddress, propertyAddressLocality, propertyAddressRegion, propertyPostalCode, propertyExtra
+            'description' => $this->parsePropertyDescription(), //text
+            'price'       => $this->parsePropertyPrice(),
+            'listingID'   => $this->parsePropertyListingID(),
+            'summary'     => $this->parsePropertySummary(), //propertyBeds, propertyBaths, propertySize, propertyType,,,,, like 'features' in realtor
+            'overview'    => $this->parsePropertyOverview(), //Property Overview + Special Features tables
+            'images'      => $this->parsePropertyImages(),
+            'realtors'    => $this->parsePropertyRealtors(), // images, realtorOfficeTitle, realtorPhones, realtorName,
 
-
+             /* Realtor
+            'features' => $this->parsePropertyFeatures(),//noname table (Property Type, Building Type, Title, Land Size, Age Of Building, Parking Type,
+            'realtors' => $this->parsePropertyRealtors(),
+            'buildingDetails' => $this->parsePropertyBuildingDetails(),//building
+            'landDetails' => $this->parsePropertyLandDetails(),//land
+             */
         ];
 
 
@@ -80,18 +86,20 @@ class RewPropertiesCrawler
         }
         $propertyExtra = trim($propertyExtra);
 
+        $address = $propertyStreetAddress . ', ' . $propertyAddressLocality . ', ' . $propertyAddressRegion . ', ' . $propertyPostalCode . ', ' . $propertyExtra;
         $propertyAddress = [
             'propertyStreetAddress' => $propertyStreetAddress,
             'propertyAddressLocality' => $propertyAddressLocality,
             'propertyAddressRegion' => $propertyAddressRegion,
             'propertyPostalCode' => $propertyPostalCode,
-            'propertyExtra' => $propertyExtra
+            'propertyExtra' => $propertyExtra,
+            'address' => $address
         ];
         //pre($propertyAddress, 1);
-        return $propertyAddress;
+        return $propertyAddress['address'];
     }
 
-    protected function parsePropertySummary()
+    protected function parsePropertySummary()//TODO переписать - должно само делать массив
     {
         $propertySummary = [];
         //$propertyExtra = null;
@@ -136,6 +144,15 @@ class RewPropertiesCrawler
             'size' => $propertySize,
             'type' => $propertyType,
         ];
+        //pre($propertySummary,1);
+        if (count($propertySummary)){
+            foreach ($propertySummary as $propertySummaryItemKey => $propertySummaryItemValue){
+                $propertySummaryItem = [
+                    'name' => $propertySummaryItemKey,
+                    'value' => $propertySummaryItemValue,
+                ];
+            }
+        }
         //pre($propertySummary,1);
         return $propertySummary;
     }

@@ -27,18 +27,20 @@ class RealtorPropertiesCrawler
         pre($items->length,1);
         */
         //$property = null;
-        $property = new \App\Models\Property([
+        $property = [
+            'url' => $url,
             'address' => $this->parsePropertyAddress(),
             'description' => $this->parsePropertyDescription(),
             'price' => $this->parsePropertyPrice(),
             'listingID' => $this->parsePropertyListingID(),
-            'features' => $this->parsePropertyFeatures(),//noname table
+            'features' => $this->parsePropertyFeatures(),////noname table (Property Type, Building Type, Title, Land Size, Age Of Building, Parking Type,
             'images' => $this->parsePropertyImages(),
             'realtors' => $this->parsePropertyRealtors(),
+            'propertyDetails' => $this->parsePropertyDetails(),
             'buildingDetails' => $this->parsePropertyBuildingDetails(),//building
             'landDetails' => $this->parsePropertyLandDetails(),//land
 
-        ]);
+        ];
 
         pre($property, 1);
 
@@ -87,7 +89,11 @@ class RealtorPropertiesCrawler
             $address = $address->nodeValue;
         }
         $address = trim($address);
-        return $address;
+        $propertyAddress = [
+
+            'address' => $address
+        ];
+        return $propertyAddress;
     }
 
     protected function parsePropertyDescription() //description
@@ -99,6 +105,17 @@ class RealtorPropertiesCrawler
         }
         $description = trim($description);
         return $description;
+    }
+
+    protected function parseLocationDescription() //LocationDescription
+    {
+        $items = $this->crawler->filter('#m_property_dtl_locdescription');
+        $locationDescription = null;
+        foreach ($items as $locationDescription) {
+            $description = $locationDescription->nodeValue;
+        }
+        $locationDescription = trim($locationDescription);
+        return $locationDescription;
     }
 
 
@@ -127,7 +144,7 @@ class RealtorPropertiesCrawler
 
 
 
-    protected function parsePropertyFeatures() //noname table
+    protected function parsePropertyFeatures() //noname table  
     {
         $features = [];
         $featureColls = $this->crawler->filter('#rptFeatures td');
@@ -192,6 +209,7 @@ class RealtorPropertiesCrawler
         if ($realtorCells->count()) {
             $realtorCells->each(function (Crawler $realtorCell) use (&$realtorInfo) {
 
+                $images =[];
                 $realtorName = null;
                 $realtorTitle = null;
                 $realtorLinks = [];
@@ -205,7 +223,7 @@ class RealtorPropertiesCrawler
                         $url = $image->attr('src');
                         $imageUrl = 'http://' . trim($url, '/');
                         $filename = md5($url) . '.jpg';
-                        $images[] = [
+                        $realtorImages[] = [
                             'url' => $imageUrl,
                             'filename' => $filename,
                         ];
@@ -223,7 +241,7 @@ class RealtorPropertiesCrawler
                         $url = $image->attr('src');
                         $imageUrl = 'http://' . trim($url, '/');
                         $filename = md5($url) . '.jpg';
-                        $images[] = [
+                        $realtorOfficeImages[] = [
                             'url' => $imageUrl,
                             'filename' => $filename
                         ];
@@ -296,7 +314,8 @@ class RealtorPropertiesCrawler
                     'realtorOfficeAddress' => $realtorOfficeAddress,
                     'realtorOfficeLinks' => $realtorOfficeLinks,
                     'realtorPhones' => $realtorPhones,
-                    'realtorOfficePhones' => $realtorOfficePhones
+                    'realtorOfficePhones' => $realtorOfficePhones,
+                    'images' => $images,
 
 
                 ];
@@ -308,6 +327,39 @@ class RealtorPropertiesCrawler
         return $realtorInfo;
     }
 
+
+
+    protected function parsePropertyDetails()
+    {
+        $propertyDetails = [];
+        $featureColls = $this->crawler->filter('#rptPropertyDetails td');
+        //pre(count($featureColls),1);
+        if ($featureColls->count()) {
+            $featureColls->each(function (Crawler $featureColl) use (&$propertyDetails) {
+                $featureName = null;
+                $featureValue = null;
+                $featureNameEl = $featureColl->filter('span:first-child');
+                if ($featureNameEl->count()) {
+                    $featureName = trim($featureNameEl->text());
+                }
+                $featureValueEl = $featureColl->filter('span:last-child');
+                if ($featureValueEl->count()) {
+                    $featureValue = trim($featureValueEl->text());
+                    //pre($featureValue);
+                }
+                if ($featureName && $featureValue) {
+                    $propertyDetails[] = [
+                        'name' => $featureName,
+                        'value' => $featureValue,
+                        'type' => 'PropertyDetails'
+                    ];
+                }
+            });
+
+        }
+        //pre($features,1);
+        return $propertyDetails;
+    }
 
     protected function parsePropertyBuildingDetails()//building
     {

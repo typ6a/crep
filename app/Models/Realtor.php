@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Property extends Model
+class Realtor extends Model
 {
-    protected $table = 'property';
+    protected $table = 'realtor';
     
     public $timestamps = false;
     
@@ -31,6 +31,29 @@ class Property extends Model
 
 
 
+images' => $images,
+                    'realtorOfficeTitle' => $realtorOfficeTitle,
+                    'realtorPhones' => $realtorPhones,
+                    'realtorName' => $realtorName,
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
     /*
     public function category(){
@@ -54,7 +77,7 @@ class Property extends Model
     }
 
     public function realtors(){
-        return $this->belongsTo('App\Models\RealtorToProperty');
+        return $this->hasMany('App\Models\RealtorToProperty', 'property_id');
     }
 
     public function buildingDetails(){
