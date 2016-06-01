@@ -11,13 +11,15 @@ class Property extends Model
     public $timestamps = false;
     
     protected $fillable = array(
-        'category_id',
-        'url',
-
-        'address',
-        'description',
-        'price',
+        //'category_id',
         'listingID',
+        'price',
+        'url',
+        'address',
+        'processed',
+
+
+        'description',
         'features', //noname table at realtor, Property Overview table + Special Features table at rew 'summary' at realtor
         'propertyDetails',
         'buildingDetails',//building table at realtor
@@ -26,7 +28,6 @@ class Property extends Model
         'landDetails',//land table at realtor
         //'features'
         'saleType', //sale rent or lease
-        'processed',
     );
 
 
@@ -45,6 +46,15 @@ class Property extends Model
         return $this->belongsTo('App\Models\PropertyCategory');
     }
 
+
+
+
+
+
+
+
+
+    
     public function images(){
         return $this->hasMany('App\Models\PropertyImage', 'property_id');
     }
