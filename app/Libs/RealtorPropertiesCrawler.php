@@ -13,6 +13,11 @@ class RealtorPropertiesCrawler
 
     public function execute()
     {
+        //$properties = \App\Models\Property::where('processed', 0)->get();
+
+
+
+
         $url = 'https://www.realtor.ca/Residential/Single-Family/16801705/60-HEMLOCK-Street-CARDIFF-Ontario-K0L1M0';
         $html = file_get_contents($url);
         $html = preg_replace('#<script(.*?)>(.*?)</script>#is', '', $html);
@@ -27,12 +32,15 @@ class RealtorPropertiesCrawler
         pre($items->length,1);
         */
         //$property = null;
-        $property = [
+        $property =
+
+            [
+            'listing_id' => $this->parsePropertyListingID(),
+            'price' => $this->parsePropertyPrice(),
             'url' => $url,
             'address' => $this->parsePropertyAddress(),
+            //'sales_type',    
             'description' => $this->parsePropertyDescription(),
-            'price' => $this->parsePropertyPrice(),
-            'listingID' => $this->parsePropertyListingID(),
             'features' => $this->parsePropertyFeatures(),////noname table (Property Type, Building Type, Title, Land Size, Age Of Building, Parking Type,
             'images' => $this->parsePropertyImages(),
             'realtors' => $this->parsePropertyRealtors(),
@@ -316,6 +324,8 @@ class RealtorPropertiesCrawler
                     'realtorPhones' => $realtorPhones,
                     'realtorOfficePhones' => $realtorOfficePhones,
                     'images' => $images,
+                    //  $realtorOfficePicture,
+                    //  $realtorPicture
 
 
                 ];
