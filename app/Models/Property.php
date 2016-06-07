@@ -29,7 +29,7 @@ class Property extends Model
         return $this->belongsTo('App\Models\PropertyCategory');
     }
     public function features(){
-        return $this->hasMany('App\Models\PropertyToPropertyFeature', 'property_id');
+        return $this->belongsToMany('App\Models\PropertyFeature', 'property_to_property_feature', 'property_id', 'feature_id');
     }
 
     

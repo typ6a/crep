@@ -13,5 +13,8 @@ class PropertyFeature extends Model
     protected $fillable = array(
         'name'
     );
-    
+
+    public function properties(){
+        return $this->belongsToMany('App\Models\Property', 'property_to_property_feature', 'feature_id', 'property_id');
+    }
 }
